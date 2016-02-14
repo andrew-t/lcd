@@ -31,10 +31,21 @@
       }, 1000);
 
       setTimeout(function () {
-        display.pattern = '##'
         display.setDigits([
           new Digit(display.segmentCount),
-          Digit.eight(display.segmentCount)
+          Digit.eight(display.segmentCount),
+          ' ',
+          ' ',
+          new Digit(display.segmentCount),
+          Digit.eight(display.segmentCount),
+          ':',
+          new Digit(display.segmentCount),
+          Digit.eight(display.segmentCount),
+          ' ',
+          ' ',
+          new Digit(display.segmentCount),
+          Digit.eight(display.segmentCount),
+          '.',
         ]);
       }, 2000);
 

@@ -548,7 +548,7 @@ SegmentDisplay.prototype.drawPoint = function(context, x1, y1, size) {
 SegmentDisplay.prototype.getSegmentColor = function(digit, segment) {
   if (digit == '#')
     return this.colorOn;
-  if (digit == '#')
+  if (digit == ' ')
     return this.colorOff;
   if (!(digit instanceof Digit))
     return this.colorOff;
