@@ -40,7 +40,16 @@ function SegmentDisplay(displayId) {
 };
 
 SegmentDisplay.prototype.setValue = function(value) {
-  this.value = value;
+  var self = this;
+  this.setDigits(value.toLowerCase().split('').map(function(value) {
+    if (value == '#' || value == ':' || value == '.')
+      return value;
+    return self.getDigit(value);
+  }));
+};
+
+SegmentDisplay.prototype.setDigits = function(digits) {
+  this.digits = digits;
   this.draw();
 };
 
@@ -57,7 +66,7 @@ SegmentDisplay.prototype.draw = function() {
       var first = true;
       if (this.pattern) {
         for (var i = 0; i < this.pattern.length; i++) {
-          var c = this.pattern.charAt(i).toLowerCase();
+          var c = this.pattern[i];
           if (c == '#') {
             width += this.digitWidth;
           } else if (c == '.' || c == ':') {
@@ -91,13 +100,10 @@ SegmentDisplay.prototype.draw = function() {
       context.transform(1, 0, skew, 1, 0, 0);
 
       // draw segments
-      var xPos = 0;
-      var size = (this.value) ? this.value.length : 0;
-      for (var i = 0; i < this.pattern.length; i++) {
-        var mask  = this.pattern.charAt(i);
-        var value = (i < size) ? this.value.charAt(i).toLowerCase() : ' ';
-        xPos += this.drawDigit(context, xPos, mask, value);
-      }
+      var xPos = 0, self = this;
+      this.digits.forEach(function(digit, i) {
+        xPos += self.drawDigit(context, xPos, self.pattern.charAt(i), digit);
+      });
 
       // finish drawing
       context.restore();
@@ -105,7 +111,7 @@ SegmentDisplay.prototype.draw = function() {
   }
 };
 
-SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
+SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, digit) {
   switch (mask) {
     case '#':
       var r = Math.sqrt(this.segmentWidth * this.segmentWidth / 2.0);
@@ -118,11 +124,11 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       var s = this.segmentWidth / 2.0;
       var t = this.digitWidth / 2.0;
 
-      // draw segment a (a1 and a2 for 16 segments)
+      // draw segment 0 (0 and D for 16 segments)
       if (this.segmentCount == 16) {
         var x = xPos;
         var y = 0;
-        context.fillStyle = this.getSegmentColor(c, null, '02356789abcdefgiopqrstz@%');
+        context.fillStyle = this.getSegmentColor(digit, 0);
         context.beginPath();
         switch (this.cornerType) {
           case SegmentDisplay.SymmetricCorner:
@@ -145,7 +151,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         
         var x = xPos;
         var y = 0;
-        context.fillStyle = this.getSegmentColor(c, null, '02356789abcdefgiopqrstz@');
+        context.fillStyle = this.getSegmentColor(digit, 1);
         context.beginPath();
         context.moveTo(x + this.digitWidth - this.segmentWidth - d, y + this.segmentWidth);
         context.lineTo(x + t + d + s, y + this.segmentWidth);
@@ -169,7 +175,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       } else {
         var x = xPos;
         var y = 0;
-        context.fillStyle = this.getSegmentColor(c, '02356789acefp', '02356789abcdefgiopqrstz@');
+        context.fillStyle = this.getSegmentColor(digit, 2);
         context.beginPath();
         switch (this.cornerType) {
           case SegmentDisplay.SymmetricCorner:
@@ -195,10 +201,10 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         context.fill();
       }
       
-      // draw segment b
+      // draw segment 2
       x = xPos + this.digitWidth - this.segmentWidth;
       y = 0;
-      context.fillStyle = this.getSegmentColor(c, '01234789adhpy', '01234789abdhjmnopqruwy');
+      context.fillStyle = this.getSegmentColor(digit, 3);
       context.beginPath();
       switch (this.cornerType) {
         case SegmentDisplay.SymmetricCorner:
@@ -219,10 +225,10 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       context.lineTo(x, y + this.segmentWidth + d);
       context.fill();
       
-      // draw segment c
+      // draw segment 1
       x = xPos + this.digitWidth - this.segmentWidth;
       y = h + this.segmentWidth;
-      context.fillStyle = this.getSegmentColor(c, '013456789abdhnouy', '01346789abdghjmnoqsuw@', '%');
+      context.fillStyle = this.getSegmentColor(digit, 4);
       context.beginPath();
       context.moveTo(x, y + this.segmentWidth + d);
       context.lineTo(x + s, y + s + d);
@@ -243,11 +249,11 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       }
       context.fill();
       
-      // draw segment d (d1 and d2 for 16 segments)
+      // draw segment 3 (3 and E for 16 segments)
       if (this.segmentCount == 16) {
         x = xPos;
         y = this.digitHeight - this.segmentWidth;
-        context.fillStyle = this.getSegmentColor(c, null, '0235689bcdegijloqsuz_=@');
+        context.fillStyle = this.getSegmentColor(digit, 5);
         context.beginPath();
         context.moveTo(x + this.segmentWidth + d, y);
         context.lineTo(x + t - d - s, y);
@@ -271,7 +277,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
 
         x = xPos;
         y = this.digitHeight - this.segmentWidth;
-        context.fillStyle = this.getSegmentColor(c, null, '0235689bcdegijloqsuz_=@', '%');
+        context.fillStyle = this.getSegmentColor(digit, 6);
         context.beginPath();
         context.moveTo(x + t + d + s, y + this.segmentWidth);
         context.lineTo(x + t + d, y + s);
@@ -295,7 +301,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       else {
         x = xPos;
         y = this.digitHeight - this.segmentWidth;
-        context.fillStyle = this.getSegmentColor(c, '0235689bcdelotuy_', '0235689bcdegijloqsuz_=@');
+        context.fillStyle = this.getSegmentColor(digit, 7);
         context.beginPath();
         context.moveTo(x + this.segmentWidth + d, y);
         context.lineTo(x + this.digitWidth - this.segmentWidth - d, y);
@@ -325,7 +331,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       // draw segment e
       x = xPos;
       y = h + this.segmentWidth;
-      context.fillStyle = this.getSegmentColor(c, '0268abcdefhlnoprtu', '0268acefghjklmnopqruvw@');
+      context.fillStyle = this.getSegmentColor(digit, 8);
       context.beginPath();
       context.moveTo(x, y + this.segmentWidth + d);
       context.lineTo(x + s, y + s + d);
@@ -349,7 +355,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       // draw segment f
       x = xPos;
       y = 0;
-      context.fillStyle = this.getSegmentColor(c, '045689abcefhlpty', '045689acefghklmnopqrsuvwy@', '%');
+      context.fillStyle = this.getSegmentColor(digit, 9);
       context.beginPath();
       context.moveTo(x + this.segmentWidth, y + this.segmentWidth + d);
       context.lineTo(x + this.segmentWidth, y + h + this.segmentWidth - d);
@@ -375,7 +381,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       if (this.segmentCount == 7) {
         x = xPos;
         y = (this.digitHeight - this.segmentWidth) / 2.0;
-        context.fillStyle = this.getSegmentColor(c, '2345689abdefhnoprty-=');
+        context.fillStyle = this.getSegmentColor(digit, 10);
         context.beginPath();
         context.moveTo(x + s + d, y + s);
         context.lineTo(x + this.segmentWidth + d, y);
@@ -391,7 +397,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment g1
         x = xPos;
         y = (this.digitHeight - this.segmentWidth) / 2.0;
-        context.fillStyle = this.getSegmentColor(c, null, '2345689aefhkprsy-+*=', '%');
+        context.fillStyle = this.getSegmentColor(digit, 11);
         context.beginPath();
         context.moveTo(x + s + d, y + s);
         context.lineTo(x + this.segmentWidth + d, y);
@@ -404,7 +410,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment g2
         x = xPos;
         y = (this.digitHeight - this.segmentWidth) / 2.0;
-        context.fillStyle = this.getSegmentColor(c, null, '234689abefghprsy-+*=@', '%');
+        context.fillStyle = this.getSegmentColor(digit, 12);
         context.beginPath();
         context.moveTo(x + t + d, y + s);
         context.lineTo(x + t + d + s, y);
@@ -417,7 +423,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment j 
         x = xPos + t - s;
         y = 0;
-        context.fillStyle = this.getSegmentColor(c, null, 'bdit+*', '%');
+        context.fillStyle = this.getSegmentColor(digit, 13);
         context.beginPath();
         if (this.segmentCount == 14) {
           context.moveTo(x, y + this.segmentWidth + this.segmentDistance);
@@ -435,7 +441,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment m
         x = xPos + t - s;
         y = this.digitHeight;
-        context.fillStyle = this.getSegmentColor(c, null, 'bdity+*@', '%');
+        context.fillStyle = this.getSegmentColor(digit, 14);
         context.beginPath();
         if (this.segmentCount == 14) {
           context.moveTo(x, y - this.segmentWidth - this.segmentDistance);
@@ -453,7 +459,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment h
         x = xPos + this.segmentWidth;
         y = this.segmentWidth;
-        context.fillStyle = this.getSegmentColor(c, null, 'mnx\\*');
+        context.fillStyle = this.getSegmentColor(digit, 15);
         context.beginPath();
         context.moveTo(x + this.segmentDistance, y + this.segmentDistance);
         context.lineTo(x + this.segmentDistance + r, y + this.segmentDistance);
@@ -466,7 +472,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment k
         x = xPos + w + 2.0 * this.segmentWidth;
         y = this.segmentWidth;
-        context.fillStyle = this.getSegmentColor(c, null, '0kmvxz/*', '%');
+        context.fillStyle = this.getSegmentColor(digit, 16);
         context.beginPath();
         context.moveTo(x + w - this.segmentDistance, y + this.segmentDistance);
         context.lineTo(x + w - this.segmentDistance, y + this.segmentDistance + r);
@@ -479,7 +485,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment l
         x = xPos + w + 2.0 * this.segmentWidth;
         y = h + 2.0 * this.segmentWidth;
-        context.fillStyle = this.getSegmentColor(c, null, '5knqrwx\\*');
+        context.fillStyle = this.getSegmentColor(digit, 17);
         context.beginPath();
         context.moveTo(x + this.segmentDistance, y + this.segmentDistance);
         context.lineTo(x + this.segmentDistance + r, y + this.segmentDistance);
@@ -492,7 +498,7 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
         // draw segment n
         x = xPos + this.segmentWidth;
         y = h + 2.0 * this.segmentWidth;
-        context.fillStyle = this.getSegmentColor(c, null, '0vwxz/*', '%');
+        context.fillStyle = this.getSegmentColor(digit, 18);
         context.beginPath();
         context.moveTo(x + w - this.segmentDistance, y + this.segmentDistance);
         context.lineTo(x + w - this.segmentDistance, y + this.segmentDistance + r);
@@ -506,12 +512,12 @@ SegmentDisplay.prototype.drawDigit = function(context, xPos, mask, c) {
       return this.digitDistance + this.digitWidth;
       
     case '.':
-      context.fillStyle = (c == '#') || (c == '.') ? this.colorOn : this.colorOff;
+      context.fillStyle = (digit == '#') || (digit == '.') ? this.colorOn : this.colorOff;
       this.drawPoint(context, xPos, this.digitHeight - this.segmentWidth, this.segmentWidth);
       return this.digitDistance + this.segmentWidth;
       
     case ':':
-      context.fillStyle = (c == '#') || (c == ':') ? this.colorOn : this.colorOff;
+      context.fillStyle = (digit == '#') || (digit == ':') ? this.colorOn : this.colorOff;
       var y = (this.digitHeight - this.segmentWidth) / 2.0 - this.segmentWidth;
       this.drawPoint(context, xPos, y, this.segmentWidth);
       this.drawPoint(context, xPos, y + 2.0 * this.segmentWidth, this.segmentWidth);
@@ -539,20 +545,128 @@ SegmentDisplay.prototype.drawPoint = function(context, x1, y1, size) {
   context.fill();
 }; 
 
-SegmentDisplay.prototype.getSegmentColor = function(c, charSet7, charSet14, charSet16) {
-  if (c == '#') {
+SegmentDisplay.prototype.getSegmentColor = function(digit, segment) {
+  if (digit == '#')
     return this.colorOn;
-  } else {
-    switch (this.segmentCount) {
-      case 7:  return (charSet7.indexOf(c) == -1) ? this.colorOff : this.colorOn;
-      case 14: return (charSet14.indexOf(c) == -1) ? this.colorOff : this.colorOn;
-      case 16: var pattern = charSet14 + (charSet16 === undefined ? '' : charSet16);
-               return (pattern.indexOf(c) == -1) ? this.colorOff : this.colorOn;
-      default: return this.colorOff;
-    }
-  }
+  if (digit == '#')
+    return this.colorOff;
+  if (!(digit instanceof Digit))
+    return this.colorOff;
+  return digit.segments[SegmentDisplay.fontSegments[segment]]
+    ? this.colorOn : this.colorOff;
 };
 
+SegmentDisplay.prototype.getDigit = function(c) {
+  var digit = new Digit(this.segmentCount),
+    font,
+    self = this;
+  if (this.segmentCount == 16)
+    font = 2;
+  else if (this.segmentCount == 14)
+    font = 1;
+  else if (this.segmentCount == 7)
+    font = 0;
+  else 
+    throw new Error('Bad segment count: ' + this.segmentCount);
+  SegmentDisplay.fontSegments.forEach(function(segment, i) {
+    if (SegmentDisplay.fontUses[font][i]) {
+      var on = SegmentDisplay.fonts[i][font];
+      if (on && on.indexOf(c) >= 0)
+        digit.segments[segment] = true;
+    }
+  });
+  return digit;
+};
 
+SegmentDisplay.fontSegments = [
+  0, 0xE, 0, 2, 5,
+  6, 0xF, 6, 4, 1,
+  3, 0xD, 3, 8, 0xB,
+  7, 9, 0xC, 0xA ];
+SegmentDisplay.fontUses = [
+  [
+    false, false, true, true, true,
+    false, false, true, true, true,
+    true, false, false, false, false,
+    false, false, false, false
+  ], [
+    false, false, true, true, true,
+    false, false, true, true, true,
+    false, true, true, true, true,
+    true, true, true, true
+  ], [
+    true, true, false, true, true,
+    true, true, false, true, true,
+    false, true, true, true, true,
+    true, true, true, true
+  ]
+];
+SegmentDisplay.fonts = [
+    [ null, '02356789abcdefgiopqrstz@%' ], // 0 (16)
+    [ null, '02356789abcdefgiopqrstz@' ], // E (16)
+    [ '02356789acefp', '02356789abcdefgiopqrstz@' ], // 0 (7 or 14)
+    [ '01234789adhpy', '01234789abdhjmnopqruwy' ], // 2
+    [ '013456789abdhnouy', '01346789abdghjmnoqsuw@', '%' ], // 5
 
+    [ null, '0235689bcdegijloqsuz_=@' ], // 6 (16)
+    [ null, '0235689bcdegijloqsuz_=@', '%' ], // F (16)
+    [ '0235689bcdelotuy_', '0235689bcdegijloqsuz_=@' ], // 6 (7 or 14)
+    [ '0268abcdefhlnoprtu', '0268acefghjklmnopqruvw@' ], // 4
+    [ '045689abcefhlpty', '045689acefghklmnopqrsuvwy@', '%' ], // 1
 
+    [ '2345689abdefhnoprty-=' ], // 3 (7)
+    [ null, '2345689aefhkprsy-+*=', '%' ], // D (14 or 16)
+    [ null, '234689abefghprsy-+*=@', '%' ], // 3 (14 or 16)
+    [ null, 'bdit+*', '%' ], // 8
+    [ null, 'bdity+*@', '%' ], // B
+
+    [ null, 'mnx\\*' ], // 7
+    [ null, '0kmvxz/*', '%' ], // 9
+    [ null, '5knqrwx\\*' ], // C
+    [ null, '0vwxz/*', '%' ] // A
+  ].map(function(data) {
+    data[2] = data[1] + (data[2] || '');
+    return data;
+  });
+
+/*
+  7-segment coords
+
+    0000000
+   1       2
+   1       2
+   1       2
+    3333333
+   4       5
+   4       5
+   4       5
+    6666666
+*/
+
+/*
+  TODO 14-segment coords
+
+    0000000
+   17  8  92
+   1 7 8 9 2
+   1  789  2
+    333 DDD
+   4  ABC  5
+   4 A B C 5
+   4A  B  C5
+    6666666
+*/
+
+/*
+  TODO 16-segment coords
+
+    000 EEE
+   17  8  92
+   1 7 8 9 2
+   1  789  2
+    333 DDD
+   4  ABC  5
+   4 A B C 5
+   4A  B  C5
+    666 FFF
+*/
