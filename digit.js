@@ -27,6 +27,15 @@ Digit.prototype.loneSegment = function loneSegment() {
 			return j;
 };
 
+Digit.prototype.matches = function matches(digit) {
+	if (this.segmentCount() != digit.segmentCount())
+		return false;
+	for (var j = 0; j < this.segments.length; ++j)
+		if (this.segments[j] != digit.segments[j])
+			return false;
+	return true;
+};
+
 Digit.eight = function eight(n) {
 	var d = new Digit(n);
 	for (var i = 0; i < n; ++i)
